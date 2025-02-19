@@ -11,11 +11,10 @@
     body {
       background: #f8fafc;
       margin: 0;
-      overflow: hidden;
     }
     .map-container {
       width: 100vw;
-      height: 100vh;
+      height: 85vh;
     }
     .radar-legend {
       position: fixed;
@@ -28,6 +27,17 @@
       box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
       border-radius: 5px;
       z-index: 1000;
+    }
+    .info-section {
+      width: 100%;
+      background: #e2e8f0;
+      padding: 15px;
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+    }
+    .info-section strong {
+      color: #1e3a8a;
     }
   </style>
 </head>
@@ -50,6 +60,19 @@
     </ul>
   </div>
 
+  <!-- Map Information Section -->
+  <div class="info-section">
+    <strong>About This Map:</strong>  
+    This live weather radar is sourced from <strong>Environment Canada</strong> via their GeoMet API. The radar updates every <strong>10 minutes</strong>, and warnings are refreshed at the same interval.  
+    <br><br>
+    <strong>Understanding the Data:</strong>  
+    - The **radar layer** shows precipitation intensity in dBZ. Higher values indicate heavier precipitation.  
+    - The **alerts layer** highlights active weather warnings, watches, and advisories.  
+    - The **red markers** indicate locations of issued warnings. Click them for details.  
+    <br>
+    <strong>Disclaimer:</strong> This map is for informational purposes only. Radar and warning updates may be delayed, and users should verify information through official sources such as Environment Canada or local authorities.  
+  </div>
+
   <script>
     var map = L.map('weather-map', {
       zoomControl: true
@@ -68,7 +91,7 @@
       attribution: "Weather Data &copy; Environment Canada"
     }).addTo(map);
 
-    // **Weather Alerts Layer (33% Transparent)**
+    // Weather Alerts Layer (33% Transparent)
     var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
       layers: "ALERTS",
       format: "image/png",
@@ -77,7 +100,7 @@
       attribution: "Weather Alerts &copy; Environment Canada"
     }).addTo(map);
 
-    // **Weather Warning Locations (Markers)**
+    // Weather Warning Locations (Markers)
     var warningsLayer = L.layerGroup().addTo(map);
     async function fetchWeatherWarnings() {
       try {
