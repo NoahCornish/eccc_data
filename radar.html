@@ -90,7 +90,7 @@
     <strong>Disclaimer:</strong> This map is for informational purposes only. Radar and warning updates may be delayed, and users should verify information through official sources such as Environment Canada or local authorities.  
   </div>
 
-  <script>
+<script>
     var map = L.map('weather-map', {
       zoomControl: true
     }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
@@ -119,13 +119,18 @@
 
     // Weather Warning Locations (Markers)
     var warningsLayer = L.layerGroup().addTo(map);
+
     async function fetchWeatherWarnings() {
       try {
         let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
         let data = await response.json();
 
         warningsLayer.clearLayers();
+
         L.geoJSON(data, {
+          style: function (feature) {
+            return { color: "red", weight: 2, fillOpacity: 0.4 };
+          },
           pointToLayer: function (feature, latlng) {
             return L.marker(latlng, { 
               icon: L.icon({
@@ -135,16 +140,17 @@
             });
           },
           onEachFeature: function (feature, layer) {
-            let warning = feature.properties || {};
-            let popupContent = `
-              <strong>${warning.event || "Weather Warning"}</strong><br>
-              <p><b>Severity:</b> ${warning.severity || "Unknown"}<br>
-              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
-              <b>Certainty:</b> ${warning.certainty || "Unknown"}</p>
-              <p>${warning.description || "No additional details available."}</p>
-            `;
-
-            layer.bindPopup(popupContent);
+            if (feature.properties) {
+              let warning = feature.properties;
+              let popupContent = `
+                <strong>${warning.event || "Weather Warning"}</strong><br>
+                <b>Severity:</b> ${warning.severity || "Unknown"}<br>
+                <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
+                <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
+                <p>${warning.description || "No additional details available."}</p>
+              `;
+              layer.bindPopup(popupContent);
+            }
           }
         }).addTo(warningsLayer);
 
@@ -168,8 +174,8 @@
     };
 
     L.control.layers({}, overlayMaps, { collapsed: false }).addTo(map);
+</script>
 
-  </script>
 
 </body>
 </html>
