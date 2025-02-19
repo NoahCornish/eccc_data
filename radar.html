@@ -13,10 +13,6 @@
       margin: 0;
       font-family: 'Inter', sans-serif;
     }
-    .hidden-content {
-      display: none;
-    }
-
     .map-container {
       width: 100vw;
       height: 80vh;
@@ -31,28 +27,26 @@
       padding: 12px 0;
       font-size: 18px;
       font-weight: bold;
-      position: relative;
     }
 
-    /* Legend inside Header */
+    /* Smaller Legend in Upper Right */
     .custom-legend {
       position: absolute;
       top: 10px;
-      right: 15px;
+      right: 10px;
       background: rgba(0, 0, 0, 0.8);
-      padding: 5px 10px;
+      padding: 5px 8px;
       border-radius: 6px;
+      z-index: 1000;
       color: white;
       font-size: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
       box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
     }
     .legend-item {
       display: flex;
       align-items: center;
       gap: 5px;
+      margin-bottom: 3px;
     }
     .legend-bar {
       width: 50px;
@@ -145,37 +139,34 @@
     </div>
   </div>
 
-  <!-- Content Hidden Until Login -->
-  <div id="content" class="hidden-content">
-    <!-- Header -->
-    <div class="header">Live Weather Radar Service
-      <p>Created by: Noah Cornish</p>
+  <!-- Header -->
+  <div class="header">Live Weather Radar Service
+    <p>Created by: Noah Cornish</p>
+  </div>
 
-      <!-- Legend Inside Header -->
-      <div class="custom-legend">
-        <div class="legend-item">
-          <span>Rain</span>
-          <div class="legend-bar rain-bar"></div>
-        </div>
-        <div class="legend-item">
-          <span>Ice</span>
-          <div class="legend-bar ice-bar"></div>
-        </div>
-        <div class="legend-item">
-          <span>Snow</span>
-          <div class="legend-bar snow-bar"></div>
-        </div>
-      </div>
+  <!-- Smaller Legend (Upper Right) -->
+  <div class="custom-legend">
+    <div class="legend-item">
+      <span>Rain</span>
+      <div class="legend-bar rain-bar"></div>
     </div>
-
-    <!-- Interactive Weather Map -->
-    <div id="weather-map" class="map-container"></div>
-
-    <!-- Map Controls -->
-    <div class="map-controls">
-      <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
-      <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
+    <div class="legend-item">
+      <span>Ice</span>
+      <div class="legend-bar ice-bar"></div>
     </div>
+    <div class="legend-item">
+      <span>Snow</span>
+      <div class="legend-bar snow-bar"></div>
+    </div>
+  </div>
+
+  <!-- Interactive Weather Map -->
+  <div id="weather-map" class="map-container"></div>
+
+  <!-- Map Controls -->
+  <div class="map-controls">
+    <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
+    <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
   </div>
 
 <script>
@@ -185,7 +176,6 @@
 
     if (user === "noahcornish" && pass === "radar1") {
       document.getElementById("loginPopup").style.display = "none";
-      document.getElementById("content").style.display = "block";
     } else {
       alert("❌ Incorrect credentials!");
     }
