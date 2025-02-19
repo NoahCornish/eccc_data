@@ -72,12 +72,18 @@
       background: linear-gradient(to right, lightblue, darkblue);
     }
 
-    /* Locate Me Button */
-    .locate-btn {
+    /* Buttons */
+    .map-controls {
       position: absolute;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .control-btn {
       background: #1d4ed8;
       color: white;
       padding: 8px 14px;
@@ -86,11 +92,10 @@
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
-      z-index: 1000;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .locate-btn:hover {
+    .control-btn:hover {
       background: #1b3ec4;
     }
 
@@ -106,6 +111,10 @@
       .legend-bar {
         width: 80px;
         height: 8px;
+      }
+      .map-controls {
+        flex-direction: column;
+        gap: 6px;
       }
     }
   </style>
@@ -134,18 +143,35 @@
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
-  <!-- Locate Me Button -->
-  <button class="locate-btn" onclick="locateUser()">📍 Locate Me</button>
+  <!-- Map Controls -->
+  <div class="map-controls">
+    <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
+    <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
+  </div>
 
 <script>
   var map = L.map('weather-map', {
     zoomControl: true
   }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
 
-  // Base map (OpenStreetMap)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  // Base maps
+  var baseMaps = {
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }),
+    "Satellite": L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    }),
+    "Terrain": L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    })
+  };
+
+  // Default map style
+  var currentBaseLayer = baseMaps["OpenStreetMap"];
+  currentBaseLayer.addTo(map);
 
   // Live Radar Layer
   var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
@@ -178,11 +204,9 @@
         var lat = position.coords.latitude;
         var lng = position.coords.longitude;
 
-        // If marker exists, update its position
         if (userMarker) {
           userMarker.setLatLng([lat, lng]);
         } else {
-          // Create a new marker
           userMarker = L.marker([lat, lng], {
             icon: L.icon({
               iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
@@ -191,7 +215,7 @@
           }).addTo(map);
         }
 
-        map.setView([lat, lng], 10); // Zoom into user's location
+        map.setView([lat, lng], 10);
       },
       function () {
         alert("Unable to retrieve your location.");
@@ -199,9 +223,22 @@
     );
   }
 
+  function changeMapStyle() {
+    var mapStyles = Object.keys(baseMaps);
+    var currentIndex = mapStyles.indexOf(currentBaseLayer.options.attribution.includes('Google') ? 
+      (currentBaseLayer.options.attribution.includes('lyrs=s') ? "Satellite" : "Terrain") 
+      : "OpenStreetMap");
+
+    var nextIndex = (currentIndex + 1) % mapStyles.length;
+    var nextBaseLayer = baseMaps[mapStyles[nextIndex]];
+
+    map.removeLayer(currentBaseLayer);
+    currentBaseLayer = nextBaseLayer;
+    currentBaseLayer.addTo(map);
+  }
+
   // Scale Bar
   L.control.scale().addTo(map);
-
 </script>
 
 </body>
