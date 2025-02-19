@@ -29,10 +29,10 @@
       font-weight: bold;
     }
 
-    /* Legend Styling - Horizontal Layout */
+    /* Legend Styling */
     .custom-legend {
       position: absolute;
-      top: 60px; /* Below the header */
+      top: 60px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.8);
@@ -62,29 +62,40 @@
       border-radius: 5px;
     }
 
-    .rain-bar {
-      background: linear-gradient(to right, green, yellow, red, purple);
+    .rain-bar { background: linear-gradient(to right, green, yellow, red, purple); }
+    .ice-bar { background: linear-gradient(to right, pink, red); }
+    .snow-bar { background: linear-gradient(to right, lightblue, darkblue); }
+
+    /* Buttons */
+    .map-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
     }
-    .ice-bar {
-      background: linear-gradient(to right, pink, red);
+
+    .control-btn {
+      background: #1d4ed8;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     }
-    .snow-bar {
-      background: linear-gradient(to right, lightblue, darkblue);
-    }
+
+    .control-btn:hover { background: #1b3ec4; }
 
     /* Mobile adjustments */
     @media (max-width: 768px) {
-      .custom-legend {
-        width: 95%;
-        font-size: 10px;
-        gap: 10px;
-        top: 65px;
-        padding: 6px 8px;
-      }
-      .legend-bar {
-        width: 80px;
-        height: 8px;
-      }
+      .custom-legend { width: 95%; font-size: 10px; gap: 10px; top: 65px; padding: 6px 8px; }
+      .legend-bar { width: 80px; height: 8px; }
+      .map-controls { flex-direction: column; gap: 6px; }
     }
   </style>
 </head>
@@ -93,7 +104,7 @@
   <!-- Header -->
   <div class="header">Live Weather Radar Service</div>
 
-  <!-- Radar Intensity Legend (Now Horizontal) -->
+  <!-- Radar Intensity Legend -->
   <div class="custom-legend">
     <div class="legend-item">
       <span>Rain</span>
@@ -112,17 +123,38 @@
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
+  <!-- Map Controls -->
+  <div class="map-controls">
+    <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
+    <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
+  </div>
+
 <script>
-  var map = L.map('weather-map', {
-    zoomControl: true
-  }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
+  var map = L.map('weather-map', { zoomControl: true }).setView([43.7, -79.42], 7);
 
-  // Base map (OpenStreetMap)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  // Base maps
+  var baseMaps = {
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }),
+    "Satellite": L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    }),
+    "Terrain": L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    }),
+    "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB'
+    })
+  };
 
-  // Live Radar Layer
+  // Default map style
+  var currentBaseLayer = baseMaps["OpenStreetMap"];
+  currentBaseLayer.addTo(map);
+
+  // Overlays (persist when switching base layers)
   var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "RADAR_1KM_RRAI",
     format: "image/png",
@@ -130,73 +162,49 @@
     attribution: "Weather Data &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Alerts Layer (RESTORED)
   var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "ALERTS",
     format: "image/png",
     transparent: true,
-    opacity: 0.5, /* Slightly increased opacity for better visibility */
+    opacity: 0.5,
     attribution: "Weather Alerts &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Warning Locations & Regions
-  var warningsLayer = L.layerGroup().addTo(map);
+  function locateUser() {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
 
-  async function fetchWeatherWarnings() {
-    try {
-      let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
-      let data = await response.json();
+        L.marker([lat, lng], { icon: L.icon({
+          iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
+          iconSize: [12, 12]
+        })}).addTo(map);
 
-      // Clear previous warnings
-      warningsLayer.clearLayers();
-
-      // Ensure GeoJSON data exists
-      if (!data || !data.features) {
-        console.warn("No warning features found in API response.");
-        return;
+        map.setView([lat, lng], 10);
+      },
+      function () {
+        alert("Unable to retrieve your location.");
       }
-
-      L.geoJSON(data, {
-        style: function (feature) {
-          return { color: "red", weight: 2, fillOpacity: 0.3 };
-        },
-        pointToLayer: function (feature, latlng) {
-          return L.marker(latlng, { 
-            icon: L.icon({
-              iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-              iconSize: [10, 10],
-            })
-          });
-        },
-        onEachFeature: function (feature, layer) {
-          if (feature.properties) {
-            let warning = feature.properties;
-            let popupContent = 
-              <strong>${warning.event || "Weather Warning"}</strong><br>
-              <b>Severity:</b> ${warning.severity || "Unknown"}<br>
-              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
-              <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
-              <p>${warning.description || "No additional details available."}</p>
-            ;
-            layer.bindPopup(popupContent);
-          } else {
-            console.warn("Feature without properties found:", feature);
-          }
-        }
-      }).addTo(warningsLayer);
-
-    } catch (error) {
-      console.error("Failed to load weather warnings:", error);
-    }
+    );
   }
 
-  // Fetch warnings immediately & refresh every 10 minutes
-  fetchWeatherWarnings();
-  setInterval(fetchWeatherWarnings, 600000);
+  function changeMapStyle() {
+    var mapStyles = Object.keys(baseMaps);
+    var currentIndex = mapStyles.indexOf(Object.keys(baseMaps).find(key => baseMaps[key] === currentBaseLayer));
+    var nextIndex = (currentIndex + 1) % mapStyles.length;
+    var nextBaseLayer = baseMaps[mapStyles[nextIndex]];
 
-  // Scale Bar
+    map.removeLayer(currentBaseLayer);
+    currentBaseLayer = nextBaseLayer;
+    currentBaseLayer.addTo(map);
+
+    // Ensure overlays remain on top
+    radarLayer.bringToFront();
+    alertsLayer.bringToFront();
+  }
+
   L.control.scale().addTo(map);
-
 </script>
 
 </body>
