@@ -3,70 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Premium Weather Radar</title>
+  <title>ECCC LIVE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <style>
     body {
-      background: #f0f4f8;
+      background: #f8fafc;
       margin: 0;
       font-family: 'Inter', sans-serif;
-      color: #333;
     }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 20px;
-      text-align: center;
+    .map-container {
+      width: 100vw;
+      height: 80vh;
+      position: relative;
     }
+
+    /* Header */
     .header {
       background: #1d4ed8;
       color: white;
-      padding: 16px;
-      font-size: 24px;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 18px;
       font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     }
-    .map-container {
-      width: 100%;
-      height: 450px;
-      position: relative;
-      margin-top: 20px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .fullscreen {
-      height: 90vh !important;
-      width: 100% !important;
-    }
-    .map-controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 15px;
-    }
-    .control-btn {
-      background: #1d4ed8;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-      transition: 0.3s;
-    }
-    .control-btn:hover {
-      background: #133b9e;
-    }
+
+    /* Legend Styling */
     .custom-legend {
       position: absolute;
-      top: 10px;
+      top: 60px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.8);
@@ -76,26 +42,54 @@
       align-items: center;
       justify-content: space-between;
       gap: 20px;
+      z-index: 1000;
       color: white;
       font-size: 12px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
       width: 80%;
       max-width: 400px;
-      z-index: 1000;
     }
+
     .legend-item {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
     .legend-bar {
       width: 100px;
       height: 10px;
       border-radius: 5px;
     }
+
     .rain-bar { background: linear-gradient(to right, green, yellow, red, purple); }
     .ice-bar { background: linear-gradient(to right, pink, red); }
     .snow-bar { background: linear-gradient(to right, lightblue, darkblue); }
+
+    /* Buttons */
+    .map-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .control-btn {
+      background: #1d4ed8;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .control-btn:hover { background: #1b3ec4; }
 
     /* Login Popup */
     .login-popup {
@@ -158,29 +152,31 @@
   </div>
 
   <!-- Header -->
-  <div class="header">Premium Weather Radar Service</div>
+  <div class="header">Live Weather Radar Service
+    <p>Created by: Noah Cornish<p>
+  </div>
 
-  <!-- Interactive Weather Map -->
-  <div class="map-container" id="map-container">
-    <div id="weather-map" style="width: 100%; height: 100%;"></div>
-    <div class="custom-legend">
-      <div class="legend-item">
-        <span>Rain</span>
-        <div class="legend-bar rain-bar"></div>
-      </div>
-      <div class="legend-item">
-        <span>Ice</span>
-        <div class="legend-bar ice-bar"></div>
-      </div>
-      <div class="legend-item">
-        <span>Snow</span>
-        <div class="legend-bar snow-bar"></div>
-      </div>
+  <!-- Radar Intensity Legend -->
+  <div class="custom-legend">
+    <div class="legend-item">
+      <span>Rain</span>
+      <div class="legend-bar rain-bar"></div>
+    </div>
+    <div class="legend-item">
+      <span>Ice</span>
+      <div class="legend-bar ice-bar"></div>
+    </div>
+    <div class="legend-item">
+      <span>Snow</span>
+      <div class="legend-bar snow-bar"></div>
     </div>
   </div>
 
+  <!-- Interactive Weather Map -->
+  <div id="weather-map" class="map-container"></div>
+
+  <!-- Map Controls -->
   <div class="map-controls">
-    <button class="control-btn" onclick="toggleFullscreen()">🔍 Full Screen</button>
     <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
     <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
   </div>
@@ -199,10 +195,27 @@
 
   var map = L.map('weather-map', { zoomControl: true }).setView([43.7, -79.42], 7);
 
+  // Base maps
   var baseMaps = {
-    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map),
-    "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }),
+    "Satellite": L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    }),
+    "Terrain": L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google'
+    }),
+    "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB'
+    })
   };
+
+  // Default map style
+  var currentBaseLayer = baseMaps["OpenStreetMap"];
+  currentBaseLayer.addTo(map);
 
   function locateUser() {
     navigator.geolocation.getCurrentPosition(position => {
@@ -211,13 +224,13 @@
     });
   }
 
-  function toggleFullscreen() {
-    document.getElementById("map-container").classList.toggle("fullscreen");
-  }
-
   function changeMapStyle() {
-    map.removeLayer(baseMaps["OpenStreetMap"]);
-    baseMaps["Dark Mode"].addTo(map);
+    var mapStyles = Object.keys(baseMaps);
+    var nextLayer = baseMaps[mapStyles[(mapStyles.indexOf(Object.keys(baseMaps).find(key => baseMaps[key] === currentBaseLayer)) + 1) % mapStyles.length]];
+
+    map.removeLayer(currentBaseLayer);
+    currentBaseLayer = nextLayer;
+    currentBaseLayer.addTo(map);
   }
 </script>
 
