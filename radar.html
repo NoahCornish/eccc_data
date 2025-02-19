@@ -17,17 +17,19 @@
       width: 100vw;
       height: 80vh;
     }
+    
+    /* Responsive Radar Legend */
     .radar-legend {
       position: absolute;
       top: 80px;
       right: 20px;
-      background: rgba(255, 255, 255, 0.85);
-      padding: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
       font-size: 14px;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       z-index: 1000;
-      width: 180px;
+      max-width: 180px;
     }
     .radar-legend strong {
       display: block;
@@ -42,46 +44,32 @@
       margin: 0;
     }
     .radar-legend li {
-      padding: 6px;
+      padding: 5px;
       font-size: 12px;
       text-align: center;
       border-radius: 6px;
     }
-    .info-section {
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 12px;
-      max-width: 900px;
-      margin: 30px auto;
-      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
-    }
-    .info-section h2 {
-      font-size: 24px;
-      margin-bottom: 15px;
-      color: #1d4ed8;
-    }
-    .info-section p {
-      font-size: 16px;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-    .footer {
-      background: #1d4ed8;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      margin-top: 40px;
-    }
-    .footer a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      padding: 5px 10px;
-      background: #2563eb;
-      border-radius: 5px;
-    }
-    .footer a:hover {
-      background: #1e40af;
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .map-container {
+        height: 70vh; /* Smaller height for better fit on mobile */
+      }
+      .radar-legend {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 90%; /* Takes most of the screen width */
+        max-width: 300px;
+        font-size: 12px;
+        padding: 8px;
+      }
+      .radar-legend strong {
+        font-size: 14px;
+      }
+      .radar-legend li {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -89,14 +77,14 @@
 
   <!-- Header -->
   <header class="bg-blue-800 text-white py-4 text-center">
-    <h1 class="text-3xl font-semibold">Live Weather Radar Service</h1>
-    <p class="text-lg">Access the latest weather radar and alerts, now available for subscribers.</p>
+    <h1 class="text-2xl font-semibold">Live Weather Radar Service</h1>
+    <p class="text-sm">Access the latest weather radar and alerts, now available for subscribers.</p>
   </header>
 
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
-  <!-- Radar Intensity Legend -->
+  <!-- Radar Intensity Legend (Mobile Optimized) -->
   <div id="radar-legend" class="radar-legend">
     <strong>Radar Intensity (dBZ)</strong>
     <ul>
@@ -109,28 +97,6 @@
       <li style="background:#FF0000; color: #FFF;">60+ dBZ (Intense Storm)</li>
     </ul>
   </div>
-
-  <!-- Map Information Section -->
-  <div class="info-section">
-    <h2>About This Map</h2>
-    <p>This live weather radar is sourced from <strong>Environment Canada</strong> via their GeoMet API. The radar updates every <strong>10 minutes</strong>, and warnings are refreshed at the same interval.</p>
-    
-    <h3>Understanding the Data:</h3>
-    <ul class="list-disc pl-5">
-      <li>The <strong>radar layer</strong> shows precipitation intensity in dBZ. Higher values indicate heavier precipitation.</li>
-      <li>The <strong>alerts layer</strong> highlights active weather warnings, watches, and advisories.</li>
-      <li>The <strong>red markers</strong> indicate locations of issued warnings. Click them for details.</li>
-    </ul>
-
-    <h3>Disclaimer:</h3>
-    <p>This map is for informational purposes only. Radar and warning updates may be delayed, and users should verify information through official sources such as Environment Canada or local authorities.</p>
-  </div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; 2025 Live Weather Radar Service | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
-    <p>Subscribe today for premium access to our live weather radar service.</p>
-  </footer>
 
 <script>
   var map = L.map('weather-map', {
