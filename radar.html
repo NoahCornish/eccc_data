@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Weather Map - ONWeather Chaser</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <style>
+    body {
+      background: #f8fafc;
+      margin: 0;
+      overflow: hidden;
+    }
+    .map-container {
+      width: 100vw;
+      height: 100vh;
+    }
+    .radar-legend {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      font-size: 14px;
+      line-height: 18px;
+      box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Interactive Weather Map -->
+  <div id="weather-map" class="map-container"></div>
+
+  <!-- Radar Intensity Legend -->
+  <div id="radar-legend" class="radar-legend">
+    <strong>Radar Intensity (dBZ)</strong>
+    <ul>
+      <li style="color: #FFFFFF; background:#000080; padding:2px;">0-5 dBZ - Very Light</li>
+      <li style="color: #FFFFFF; background:#0000FF; padding:2px;">5-15 dBZ - Light</li>
+      <li style="color: #FFFFFF; background:#00FFFF; padding:2px;">15-30 dBZ - Moderate</li>
+      <li style="color: #000000; background:#00FF00; padding:2px;">30-40 dBZ - Heavy</li>
+      <li style="color: #000000; background:#FFFF00; padding:2px;">40-50 dBZ - Very Heavy</li>
+      <li style="color: #000000; background:#FF8000; padding:2px;">50-60 dBZ - Extreme</li>
+      <li style="color: #FFFFFF; background:#FF0000; padding:2px;">60+ dBZ - Intense Storm</li>
+    </ul>
+  </div>
+
+  <script>
+    var map = L.map('weather-map', {
+      zoomControl: true
+    }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
+
+    // Base map (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Live Radar Layer
+    var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+      layers: "RADAR_1KM_RRAI",
+      format: "image/png",
+      transparent: true,
+      attribution: "Weather Data &copy; Environment Canada"
+    }).addTo(map);
+
+    // **Weather Alerts Layer (33% Transparent)**
+    var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+      layers: "ALERTS",
+      format: "image/png",
+      transparent: true,
+      opacity: 0.33, // Makes the alerts layer 33% transparent
+      attribution: "Weather Alerts &copy; Environment Canada"
+    }).addTo(map);
+
+    // **Weather Warning Locations (Markers)**
+    var warningsLayer = L.layerGroup().addTo(map);
+    async function fetchWeatherWarnings() {
+      try {
+        let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
+        let data = await response.json();
+
+        warningsLayer.clearLayers();
+        L.geoJSON(data, {
+          pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, { 
+              icon: L.icon({
+                iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
+                iconSize: [10, 10],
+              })
+            });
+          },
+          onEachFeature: function (feature, layer) {
+            let warning = feature.properties || {};
+            let popupContent = `
+              <strong>${warning.event || "Weather Warning"}</strong><br>
+              <p><b>Severity:</b> ${warning.severity || "Unknown"}<br>
+              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
+              <b>Certainty:</b> ${warning.certainty || "Unknown"}</p>
+              <p>${warning.description || "No additional details available."}</p>
+            `;
+
+            layer.bindPopup(popupContent);
+          }
+        }).addTo(warningsLayer);
+
+      } catch (error) {
+        console.error("Failed to load weather warnings:", error);
+      }
+    }
+
+    // Fetch warnings immediately & refresh every 10 minutes
+    fetchWeatherWarnings();
+    setInterval(fetchWeatherWarnings, 600000);
+
+    // Scale Bar
+    L.control.scale().addTo(map);
+
+    // Layer Control (Radar, Alerts, & Warning Markers)
+    var overlayMaps = {
+      "📡 Radar": radarLayer,
+      "⚠️ Weather Alerts": alertsLayer,
+      "📍 Warning Locations": warningsLayer
+    };
+
+    L.control.layers({}, overlayMaps, { collapsed: false }).addTo(map);
+
+  </script>
+
+</body>
+</html>
