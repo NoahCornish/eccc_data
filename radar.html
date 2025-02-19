@@ -29,26 +29,35 @@
       font-weight: bold;
     }
 
-    /* Legend Styling */
+    /* Legend Styling - Horizontal Layout */
     .custom-legend {
       position: absolute;
-      top: 60px; /* Moves it below the title */
+      top: 60px; /* Below the header */
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.8);
       padding: 8px 12px;
       border-radius: 8px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      justify-content: space-between;
+      gap: 20px;
       z-index: 1000;
       color: white;
       font-size: 12px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+      width: 80%;
+      max-width: 400px;
     }
-    
+
+    .legend-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .legend-bar {
-      width: 80px;
+      width: 100px;
       height: 10px;
       border-radius: 5px;
     }
@@ -66,15 +75,14 @@
     /* Mobile adjustments */
     @media (max-width: 768px) {
       .custom-legend {
-        width: 90%;
-        flex-direction: column;
-        text-align: center;
-        gap: 5px;
-        top: 65px; /* Adjusted so it doesn’t block the title */
-        padding: 6px 10px;
+        width: 95%;
+        font-size: 10px;
+        gap: 10px;
+        top: 65px;
+        padding: 6px 8px;
       }
       .legend-bar {
-        width: 100px;
+        width: 80px;
         height: 8px;
       }
     }
@@ -85,7 +93,7 @@
   <!-- Header -->
   <div class="header">Live Weather Radar Service</div>
 
-  <!-- Radar Intensity Legend -->
+  <!-- Radar Intensity Legend (Now Horizontal) -->
   <div class="custom-legend">
     <div class="legend-item">
       <span>Rain</span>
@@ -122,8 +130,73 @@
     attribution: "Weather Data &copy; Environment Canada"
   }).addTo(map);
 
+  // Weather Alerts Layer (RESTORED)
+  var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+    layers: "ALERTS",
+    format: "image/png",
+    transparent: true,
+    opacity: 0.5, /* Slightly increased opacity for better visibility */
+    attribution: "Weather Alerts &copy; Environment Canada"
+  }).addTo(map);
+
+  // Weather Warning Locations & Regions
+  var warningsLayer = L.layerGroup().addTo(map);
+
+  async function fetchWeatherWarnings() {
+    try {
+      let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
+      let data = await response.json();
+
+      // Clear previous warnings
+      warningsLayer.clearLayers();
+
+      // Ensure GeoJSON data exists
+      if (!data || !data.features) {
+        console.warn("No warning features found in API response.");
+        return;
+      }
+
+      L.geoJSON(data, {
+        style: function (feature) {
+          return { color: "red", weight: 2, fillOpacity: 0.3 };
+        },
+        pointToLayer: function (feature, latlng) {
+          return L.marker(latlng, { 
+            icon: L.icon({
+              iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
+              iconSize: [10, 10],
+            })
+          });
+        },
+        onEachFeature: function (feature, layer) {
+          if (feature.properties) {
+            let warning = feature.properties;
+            let popupContent = `
+              <strong>${warning.event || "Weather Warning"}</strong><br>
+              <b>Severity:</b> ${warning.severity || "Unknown"}<br>
+              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
+              <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
+              <p>${warning.description || "No additional details available."}</p>
+            `;
+            layer.bindPopup(popupContent);
+          } else {
+            console.warn("Feature without properties found:", feature);
+          }
+        }
+      }).addTo(warningsLayer);
+
+    } catch (error) {
+      console.error("Failed to load weather warnings:", error);
+    }
+  }
+
+  // Fetch warnings immediately & refresh every 10 minutes
+  fetchWeatherWarnings();
+  setInterval(fetchWeatherWarnings, 600000);
+
   // Scale Bar
   L.control.scale().addTo(map);
+
 </script>
 
 </body>
