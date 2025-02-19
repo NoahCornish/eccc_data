@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Weather Map</title>
+  <title>Live Weather Radar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -11,29 +11,30 @@
     body {
       background: #f8fafc;
       margin: 0;
+      font-family: 'Inter', sans-serif;
     }
     .map-container {
       width: 100vw;
-      height: 85vh;
+      height: 80vh;
     }
     .radar-legend {
       position: absolute;
-      top: 70px; /* Places it below the layer control */
-      right: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 6px;
-      font-size: 12px;
-      line-height: 14px;
-      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-      border-radius: 5px;
+      top: 80px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 12px;
+      font-size: 14px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
       z-index: 1000;
-      width: 140px;
+      width: 180px;
     }
     .radar-legend strong {
       display: block;
       text-align: center;
-      margin-bottom: 5px;
-      font-size: 13px;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #1d4ed8;
     }
     .radar-legend ul {
       list-style: none;
@@ -41,29 +42,61 @@
       margin: 0;
     }
     .radar-legend li {
-      padding: 2px;
-      font-size: 11px;
+      padding: 6px;
+      font-size: 12px;
       text-align: center;
+      border-radius: 6px;
     }
     .info-section {
-      width: 100%;
-      background: #e2e8f0;
-      padding: 15px;
-      text-align: center;
-      font-size: 14px;
-      color: #333;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 900px;
+      margin: 30px auto;
+      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
     }
-    .info-section strong {
-      color: #1e3a8a;
+    .info-section h2 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: #1d4ed8;
+    }
+    .info-section p {
+      font-size: 16px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    .footer {
+      background: #1d4ed8;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .footer a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 5px 10px;
+      background: #2563eb;
+      border-radius: 5px;
+    }
+    .footer a:hover {
+      background: #1e40af;
     }
   </style>
 </head>
 <body>
 
+  <!-- Header -->
+  <header class="bg-blue-800 text-white py-4 text-center">
+    <h1 class="text-3xl font-semibold">Live Weather Radar Service</h1>
+    <p class="text-lg">Access the latest weather radar and alerts, now available for subscribers.</p>
+  </header>
+
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
-  <!-- Radar Intensity Legend (Now Smaller & Positioned in Top Right) -->
+  <!-- Radar Intensity Legend -->
   <div id="radar-legend" class="radar-legend">
     <strong>Radar Intensity (dBZ)</strong>
     <ul>
@@ -79,112 +112,112 @@
 
   <!-- Map Information Section -->
   <div class="info-section">
-    <strong>About This Map:</strong>  
-    This live weather radar is sourced from <strong>Environment Canada</strong> via their GeoMet API. The radar updates every <strong>10 minutes</strong>, and warnings are refreshed at the same interval.  
-    <br><br>
-    <strong>Understanding the Data:</strong>  
-    - The **radar layer** shows precipitation intensity in dBZ. Higher values indicate heavier precipitation.  
-    - The **alerts layer** highlights active weather warnings, watches, and advisories.  
-    - The **red markers** indicate locations of issued warnings. Click them for details.  
-    <br>
-    <strong>Disclaimer:</strong> This map is for informational purposes only. Radar and warning updates may be delayed, and users should verify information through official sources such as Environment Canada or local authorities.  
+    <h2>About This Map</h2>
+    <p>This live weather radar is sourced from <strong>Environment Canada</strong> via their GeoMet API. The radar updates every <strong>10 minutes</strong>, and warnings are refreshed at the same interval.</p>
+    
+    <h3>Understanding the Data:</h3>
+    <ul class="list-disc pl-5">
+      <li>The <strong>radar layer</strong> shows precipitation intensity in dBZ. Higher values indicate heavier precipitation.</li>
+      <li>The <strong>alerts layer</strong> highlights active weather warnings, watches, and advisories.</li>
+      <li>The <strong>red markers</strong> indicate locations of issued warnings. Click them for details.</li>
+    </ul>
+
+    <h3>Disclaimer:</h3>
+    <p>This map is for informational purposes only. Radar and warning updates may be delayed, and users should verify information through official sources such as Environment Canada or local authorities.</p>
   </div>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 Live Weather Radar Service | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+    <p>Subscribe today for premium access to our live weather radar service.</p>
+  </footer>
+
 <script>
-    var map = L.map('weather-map', {
-      zoomControl: true
-    }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
+  var map = L.map('weather-map', {
+    zoomControl: true
+  }).setView([43.7, -79.42], 7); // Centered on Southern Ontario
 
-    // Base map (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  // Base map (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
 
-    // Live Radar Layer
-    var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
-      layers: "RADAR_1KM_RRAI",
-      format: "image/png",
-      transparent: true,
-      attribution: "Weather Data &copy; Environment Canada"
-    }).addTo(map);
+  // Live Radar Layer
+  var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+    layers: "RADAR_1KM_RRAI",
+    format: "image/png",
+    transparent: true,
+    attribution: "Weather Data &copy; Environment Canada"
+  }).addTo(map);
 
-    // Weather Alerts Layer (33% Transparent)
-    var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
-      layers: "ALERTS",
-      format: "image/png",
-      transparent: true,
-      opacity: 0.33,
-      attribution: "Weather Alerts &copy; Environment Canada"
-    }).addTo(map);
+  // Weather Alerts Layer (33% Transparent)
+  var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+    layers: "ALERTS",
+    format: "image/png",
+    transparent: true,
+    opacity: 0.33,
+    attribution: "Weather Alerts &copy; Environment Canada"
+  }).addTo(map);
 
-    // Weather Warning Locations & Regions
-    var warningsLayer = L.layerGroup().addTo(map);
+  // Weather Warning Locations & Regions
+  var warningsLayer = L.layerGroup().addTo(map);
 
-    async function fetchWeatherWarnings() {
-      try {
-        let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
-        let data = await response.json();
+  async function fetchWeatherWarnings() {
+    try {
+      let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
+      let data = await response.json();
 
-        // Clear previous warnings
-        warningsLayer.clearLayers();
+      // Clear previous warnings
+      warningsLayer.clearLayers();
 
-        // Ensure GeoJSON data exists
-        if (!data || !data.features) {
-          console.warn("No warning features found in API response.");
-          return;
-        }
-
-        L.geoJSON(data, {
-          style: function (feature) {
-            return { color: "red", weight: 2, fillOpacity: 0.3 };
-          },
-          pointToLayer: function (feature, latlng) {
-            return L.marker(latlng, { 
-              icon: L.icon({
-                iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-                iconSize: [10, 10],
-              })
-            });
-          },
-          onEachFeature: function (feature, layer) {
-            if (feature.properties) {
-              let warning = feature.properties;
-              let popupContent = `
-                <strong>${warning.event || "Weather Warning"}</strong><br>
-                <b>Severity:</b> ${warning.severity || "Unknown"}<br>
-                <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
-                <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
-                <p>${warning.description || "No additional details available."}</p>
-              `;
-              layer.bindPopup(popupContent);
-            } else {
-              console.warn("Feature without properties found:", feature);
-            }
-          }
-        }).addTo(warningsLayer);
-
-      } catch (error) {
-        console.error("Failed to load weather warnings:", error);
+      // Ensure GeoJSON data exists
+      if (!data || !data.features) {
+        console.warn("No warning features found in API response.");
+        return;
       }
+
+      L.geoJSON(data, {
+        style: function (feature) {
+          return { color: "red", weight: 2, fillOpacity: 0.3 };
+        },
+        pointToLayer: function (feature, latlng) {
+          return L.marker(latlng, { 
+            icon: L.icon({
+              iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
+              iconSize: [10, 10],
+            })
+          });
+        },
+        onEachFeature: function (feature, layer) {
+          if (feature.properties) {
+            let warning = feature.properties;
+            let popupContent = `
+              <strong>${warning.event || "Weather Warning"}</strong><br>
+              <b>Severity:</b> ${warning.severity || "Unknown"}<br>
+              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
+              <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
+              <p>${warning.description || "No additional details available."}</p>
+            `;
+            layer.bindPopup(popupContent);
+          } else {
+            console.warn("Feature without properties found:", feature);
+          }
+        }
+      }).addTo(warningsLayer);
+
+    } catch (error) {
+      console.error("Failed to load weather warnings:", error);
     }
+  }
 
-    // Fetch warnings immediately & refresh every 10 minutes
-    fetchWeatherWarnings();
-    setInterval(fetchWeatherWarnings, 600000);
+  // Fetch warnings immediately & refresh every 10 minutes
+  fetchWeatherWarnings();
+  setInterval(fetchWeatherWarnings, 600000);
 
-    // Scale Bar
-    L.control.scale().addTo(map);
+  // Scale Bar
+  L.control.scale().addTo(map);
 
-    // Layer Control (Radar, Alerts, & Warning Markers)
-    var overlayMaps = {
-      "📡 Radar": radarLayer,
-      "⚠️ Weather Alerts": alertsLayer,
-      "📍 Warning Locations & Areas": warningsLayer
-    };
-
-    L.control.layers({}, overlayMaps, { collapsed: false }).addTo(map);
 </script>
-
 
 </body>
 </html>
