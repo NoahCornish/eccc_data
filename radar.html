@@ -32,7 +32,7 @@
     /* Legend Styling - Horizontal Layout */
     .custom-legend {
       position: absolute;
-      top: 60px; /* Below the header */
+      top: 60px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.8);
@@ -70,6 +70,28 @@
     }
     .snow-bar {
       background: linear-gradient(to right, lightblue, darkblue);
+    }
+
+    /* Locate Me Button */
+    .locate-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1d4ed8;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .locate-btn:hover {
+      background: #1b3ec4;
     }
 
     /* Mobile adjustments */
@@ -112,6 +134,9 @@
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
+  <!-- Locate Me Button -->
+  <button class="locate-btn" onclick="locateUser()">📍 Locate Me</button>
+
 <script>
   var map = L.map('weather-map', {
     zoomControl: true
@@ -130,69 +155,49 @@
     attribution: "Weather Data &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Alerts Layer (RESTORED)
+  // Weather Alerts Layer
   var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "ALERTS",
     format: "image/png",
     transparent: true,
-    opacity: 0.5, /* Slightly increased opacity for better visibility */
+    opacity: 0.5,
     attribution: "Weather Alerts &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Warning Locations & Regions
-  var warningsLayer = L.layerGroup().addTo(map);
+  // User location marker
+  var userMarker;
 
-  async function fetchWeatherWarnings() {
-    try {
-      let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
-      let data = await response.json();
+  function locateUser() {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
 
-      // Clear previous warnings
-      warningsLayer.clearLayers();
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
 
-      // Ensure GeoJSON data exists
-      if (!data || !data.features) {
-        console.warn("No warning features found in API response.");
-        return;
-      }
-
-      L.geoJSON(data, {
-        style: function (feature) {
-          return { color: "red", weight: 2, fillOpacity: 0.3 };
-        },
-        pointToLayer: function (feature, latlng) {
-          return L.marker(latlng, { 
+        // If marker exists, update its position
+        if (userMarker) {
+          userMarker.setLatLng([lat, lng]);
+        } else {
+          // Create a new marker
+          userMarker = L.marker([lat, lng], {
             icon: L.icon({
               iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-              iconSize: [10, 10],
+              iconSize: [12, 12]
             })
-          });
-        },
-        onEachFeature: function (feature, layer) {
-          if (feature.properties) {
-            let warning = feature.properties;
-            let popupContent = `
-              <strong>${warning.event || "Weather Warning"}</strong><br>
-              <b>Severity:</b> ${warning.severity || "Unknown"}<br>
-              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
-              <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
-              <p>${warning.description || "No additional details available."}</p>
-            `;
-            layer.bindPopup(popupContent);
-          } else {
-            console.warn("Feature without properties found:", feature);
-          }
+          }).addTo(map);
         }
-      }).addTo(warningsLayer);
 
-    } catch (error) {
-      console.error("Failed to load weather warnings:", error);
-    }
+        map.setView([lat, lng], 10); // Zoom into user's location
+      },
+      function () {
+        alert("Unable to retrieve your location.");
+      }
+    );
   }
-
-  // Fetch warnings immediately & refresh every 10 minutes
-  fetchWeatherWarnings();
-  setInterval(fetchWeatherWarnings, 600000);
 
   // Scale Bar
   L.control.scale().addTo(map);
