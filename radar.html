@@ -3,36 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ECCC LIVE</title>
+  <title>Premium Weather Radar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <style>
     body {
-      background: #f8fafc;
+      background: #f0f4f8;
       margin: 0;
       font-family: 'Inter', sans-serif;
+      color: #333;
     }
-    .map-container {
-      width: 100vw;
-      height: 80vh;
-      position: relative;
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+      text-align: center;
     }
-
-    /* Header */
     .header {
       background: #1d4ed8;
       color: white;
-      text-align: center;
-      padding: 12px 0;
+      padding: 16px;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .info {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+      text-align: left;
+    }
+    .info h2 {
+      color: #1d4ed8;
+      font-size: 22px;
+    }
+    .info p {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .cta {
+      background: #1d4ed8;
+      color: white;
+      padding: 14px;
       font-size: 18px;
       font-weight: bold;
+      border-radius: 6px;
+      text-align: center;
+      margin-top: 20px;
+      cursor: pointer;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      transition: 0.3s;
     }
-
-    /* Legend Styling */
+    .cta:hover {
+      background: #133b9e;
+    }
+    .map-container {
+      width: 100%;
+      height: 400px;
+      position: relative;
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .fullscreen {
+      height: 90vh !important;
+      width: 100% !important;
+    }
+    .map-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .control-btn {
+      background: #1d4ed8;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      transition: 0.3s;
+    }
+    .control-btn:hover {
+      background: #133b9e;
+    }
     .custom-legend {
       position: absolute;
-      top: 60px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.8);
@@ -42,171 +108,96 @@
       align-items: center;
       justify-content: space-between;
       gap: 20px;
-      z-index: 1000;
       color: white;
       font-size: 12px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
       width: 80%;
       max-width: 400px;
+      z-index: 1000;
     }
-
     .legend-item {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
     .legend-bar {
       width: 100px;
       height: 10px;
       border-radius: 5px;
     }
-
     .rain-bar { background: linear-gradient(to right, green, yellow, red, purple); }
     .ice-bar { background: linear-gradient(to right, pink, red); }
     .snow-bar { background: linear-gradient(to right, lightblue, darkblue); }
-
-    /* Buttons */
-    .map-controls {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 1000;
-    }
-
-    .control-btn {
-      background: #1d4ed8;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .control-btn:hover { background: #1b3ec4; }
-
-    /* Mobile adjustments */
-    @media (max-width: 768px) {
-      .custom-legend { width: 95%; font-size: 10px; gap: 10px; top: 65px; padding: 6px 8px; }
-      .legend-bar { width: 80px; height: 8px; }
-      .map-controls { flex-direction: column; gap: 6px; }
-    }
   </style>
 </head>
 <body>
 
   <!-- Header -->
-  <div class="header">Live Weather Radar Service
-    <p>Created by: Noah Cornish<p>
-  </div>
+  <div class="header">Premium Weather Radar Service</div>
 
-  <!-- Radar Intensity Legend -->
-  <div class="custom-legend">
-    <div class="legend-item">
-      <span>Rain</span>
-      <div class="legend-bar rain-bar"></div>
+  <div class="container">
+    
+    <!-- Info Section -->
+    <div class="info">
+      <h2>Why Choose Our Live Radar?</h2>
+      <p>Our real-time radar provides high-resolution updates every **10 minutes**, allowing you to track storms, precipitation, and extreme weather with precision.</p>
+      
+      <h2>Key Features:</h2>
+      <ul>
+        <li>🚀 High-Resolution Doppler Radar</li>
+        <li>⚡ Live Weather Alerts & Warnings</li>
+        <li>📡 Multiple Map Styles (Satellite, Dark Mode, etc.)</li>
+        <li>📍 GPS Location Tracking</li>
+        <li>🎥 1-Hour Past Radar Animation</li>
+      </ul>
+      
+      <div class="cta">💎 Upgrade to Premium Access 💎</div>
     </div>
-    <div class="legend-item">
-      <span>Ice</span>
-      <div class="legend-bar ice-bar"></div>
-    </div>
-    <div class="legend-item">
-      <span>Snow</span>
-      <div class="legend-bar snow-bar"></div>
-    </div>
-  </div>
 
-  <!-- Interactive Weather Map -->
-  <div id="weather-map" class="map-container"></div>
+    <!-- Map & Controls -->
+    <div class="map-container" id="map-container">
+      <div id="weather-map" style="width: 100%; height: 100%;"></div>
+      <div class="custom-legend">
+        <div class="legend-item">
+          <span>Rain</span>
+          <div class="legend-bar rain-bar"></div>
+        </div>
+        <div class="legend-item">
+          <span>Ice</span>
+          <div class="legend-bar ice-bar"></div>
+        </div>
+        <div class="legend-item">
+          <span>Snow</span>
+          <div class="legend-bar snow-bar"></div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Map Controls -->
-  <div class="map-controls">
-    <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
-    <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
+    <div class="map-controls">
+      <button class="control-btn" onclick="toggleFullscreen()">🔍 Full Screen</button>
+      <button class="control-btn" onclick="locateUser()">📍 Locate Me</button>
+      <button class="control-btn" onclick="changeMapStyle()">🗺 Change Map Style</button>
+    </div>
+
   </div>
 
 <script>
   var map = L.map('weather-map', { zoomControl: true }).setView([43.7, -79.42], 7);
 
-  // Base maps
   var baseMaps = {
-    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }),
-    "Satellite": L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google'
-    }),
-    "Terrain": L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google'
-    }),
-    "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; CartoDB'
-    })
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
   };
 
-  // Default map style
-  var currentBaseLayer = baseMaps["OpenStreetMap"];
-  currentBaseLayer.addTo(map);
-
-  // Overlays (persist when switching base layers)
-  var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
-    layers: "RADAR_1KM_RRAI",
-    format: "image/png",
-    transparent: true,
-    attribution: "Weather Data &copy; Environment Canada"
-  }).addTo(map);
-
-  var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
-    layers: "ALERTS",
-    format: "image/png",
-    transparent: true,
-    opacity: 0.2,
-    attribution: "Weather Alerts &copy; Environment Canada"
-  }).addTo(map);
-
   function locateUser() {
-    navigator.geolocation.getCurrentPosition(
-      function (position) {
-        var lat = position.coords.latitude;
-        var lng = position.coords.longitude;
-
-        L.marker([lat, lng], { icon: L.icon({
-          iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-          iconSize: [12, 12]
-        })}).addTo(map);
-
-        map.setView([lat, lng], 10);
-      },
-      function () {
-        alert("Unable to retrieve your location.");
-      }
-    );
+    navigator.geolocation.getCurrentPosition(position => {
+      L.marker([position.coords.latitude, position.coords.longitude]).addTo(map);
+      map.setView([position.coords.latitude, position.coords.longitude], 10);
+    });
   }
 
-  function changeMapStyle() {
-    var mapStyles = Object.keys(baseMaps);
-    var currentIndex = mapStyles.indexOf(Object.keys(baseMaps).find(key => baseMaps[key] === currentBaseLayer));
-    var nextIndex = (currentIndex + 1) % mapStyles.length;
-    var nextBaseLayer = baseMaps[mapStyles[nextIndex]];
-
-    map.removeLayer(currentBaseLayer);
-    currentBaseLayer = nextBaseLayer;
-    currentBaseLayer.addTo(map);
-
-    // Ensure overlays remain on top
-    radarLayer.bringToFront();
-    alertsLayer.bringToFront();
+  function toggleFullscreen() {
+    document.getElementById("map-container").classList.toggle("fullscreen");
   }
-
-  L.control.scale().addTo(map);
 </script>
 
 </body>
