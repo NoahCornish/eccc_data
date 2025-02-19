@@ -16,59 +16,53 @@
     .map-container {
       width: 100vw;
       height: 80vh;
+      position: relative;
+    }
+
+    /* Legend Styling */
+    .custom-legend {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      color: white;
+      font-size: 14px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
     }
     
-    /* Responsive Radar Legend */
-    .radar-legend {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      font-size: 14px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      z-index: 1000;
-      max-width: 180px;
-    }
-    .radar-legend strong {
-      display: block;
-      text-align: center;
-      margin-bottom: 8px;
-      font-size: 16px;
-      color: #1d4ed8;
-    }
-    .radar-legend ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .radar-legend li {
-      padding: 5px;
-      font-size: 12px;
-      text-align: center;
+    .legend-bar {
+      width: 100px;
+      height: 12px;
       border-radius: 6px;
     }
 
-    /* Mobile adjustments */
+    .rain-bar {
+      background: linear-gradient(to right, green, yellow, red, purple);
+    }
+    .ice-bar {
+      background: linear-gradient(to right, pink, red);
+    }
+    .snow-bar {
+      background: linear-gradient(to right, lightblue, darkblue);
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      .map-container {
-        height: 70vh; /* Smaller height for better fit on mobile */
+      .custom-legend {
+        width: 90%;
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
       }
-      .radar-legend {
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        width: 90%; /* Takes most of the screen width */
-        max-width: 300px;
-        font-size: 12px;
-        padding: 8px;
-      }
-      .radar-legend strong {
-        font-size: 14px;
-      }
-      .radar-legend li {
-        font-size: 11px;
+      .legend-bar {
+        width: 120px;
       }
     }
   </style>
@@ -81,22 +75,24 @@
     <p class="text-sm">Access the latest weather radar and alerts, now available for subscribers.</p>
   </header>
 
+  <!-- Radar Intensity Legend -->
+  <div class="custom-legend">
+    <div class="legend-item">
+      <span>Rain</span>
+      <div class="legend-bar rain-bar"></div>
+    </div>
+    <div class="legend-item">
+      <span>Ice</span>
+      <div class="legend-bar ice-bar"></div>
+    </div>
+    <div class="legend-item">
+      <span>Snow</span>
+      <div class="legend-bar snow-bar"></div>
+    </div>
+  </div>
+
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
-
-  <!-- Radar Intensity Legend (Mobile Optimized) -->
-  <div id="radar-legend" class="radar-legend">
-    <strong>Radar Intensity (dBZ)</strong>
-    <ul>
-      <li style="background:#000080; color: #FFF;">0-5 dBZ (Very Light)</li>
-      <li style="background:#0000FF; color: #FFF;">5-15 dBZ (Light)</li>
-      <li style="background:#00FFFF; color: #000;">15-30 dBZ (Moderate)</li>
-      <li style="background:#00FF00; color: #000;">30-40 dBZ (Heavy)</li>
-      <li style="background:#FFFF00; color: #000;">40-50 dBZ (Very Heavy)</li>
-      <li style="background:#FF8000; color: #000;">50-60 dBZ (Extreme)</li>
-      <li style="background:#FF0000; color: #FFF;">60+ dBZ (Intense Storm)</li>
-    </ul>
-  </div>
 
 <script>
   var map = L.map('weather-map', {
@@ -116,7 +112,7 @@
     attribution: "Weather Data &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Alerts Layer (33% Transparent)
+  // Weather Alerts Layer
   var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "ALERTS",
     format: "image/png",
@@ -125,64 +121,8 @@
     attribution: "Weather Alerts &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Warning Locations & Regions
-  var warningsLayer = L.layerGroup().addTo(map);
-
-  async function fetchWeatherWarnings() {
-    try {
-      let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
-      let data = await response.json();
-
-      // Clear previous warnings
-      warningsLayer.clearLayers();
-
-      // Ensure GeoJSON data exists
-      if (!data || !data.features) {
-        console.warn("No warning features found in API response.");
-        return;
-      }
-
-      L.geoJSON(data, {
-        style: function (feature) {
-          return { color: "red", weight: 2, fillOpacity: 0.3 };
-        },
-        pointToLayer: function (feature, latlng) {
-          return L.marker(latlng, { 
-            icon: L.icon({
-              iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-              iconSize: [10, 10],
-            })
-          });
-        },
-        onEachFeature: function (feature, layer) {
-          if (feature.properties) {
-            let warning = feature.properties;
-            let popupContent = `
-              <strong>${warning.event || "Weather Warning"}</strong><br>
-              <b>Severity:</b> ${warning.severity || "Unknown"}<br>
-              <b>Urgency:</b> ${warning.urgency || "Unknown"}<br>
-              <b>Certainty:</b> ${warning.certainty || "Unknown"}<br>
-              <p>${warning.description || "No additional details available."}</p>
-            `;
-            layer.bindPopup(popupContent);
-          } else {
-            console.warn("Feature without properties found:", feature);
-          }
-        }
-      }).addTo(warningsLayer);
-
-    } catch (error) {
-      console.error("Failed to load weather warnings:", error);
-    }
-  }
-
-  // Fetch warnings immediately & refresh every 10 minutes
-  fetchWeatherWarnings();
-  setInterval(fetchWeatherWarnings, 600000);
-
   // Scale Bar
   L.control.scale().addTo(map);
-
 </script>
 
 </body>
