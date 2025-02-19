@@ -161,11 +161,14 @@
     }),
     "Satellite": L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google'
+      attribution: '&copy; Google"
     }),
     "Terrain": L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google'
+      attribution: '&copy; Google"
+    }),
+    "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB'
     })
   };
 
@@ -173,7 +176,7 @@
   var currentBaseLayer = baseMaps["OpenStreetMap"];
   currentBaseLayer.addTo(map);
 
-  // Live Radar Layer
+  // Live Radar Layer (stays on top)
   var radarLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "RADAR_1KM_RRAI",
     format: "image/png",
@@ -181,7 +184,7 @@
     attribution: "Weather Data &copy; Environment Canada"
   }).addTo(map);
 
-  // Weather Alerts Layer
+  // Weather Alerts Layer (stays on top)
   var alertsLayer = L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
     layers: "ALERTS",
     format: "image/png",
@@ -190,30 +193,16 @@
     attribution: "Weather Alerts &copy; Environment Canada"
   }).addTo(map);
 
-  // User location marker
-  var userMarker;
-
   function locateUser() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-
     navigator.geolocation.getCurrentPosition(
       function (position) {
         var lat = position.coords.latitude;
         var lng = position.coords.longitude;
 
-        if (userMarker) {
-          userMarker.setLatLng([lat, lng]);
-        } else {
-          userMarker = L.marker([lat, lng], {
-            icon: L.icon({
-              iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-              iconSize: [12, 12]
-            })
-          }).addTo(map);
-        }
+        L.marker([lat, lng], { icon: L.icon({
+          iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
+          iconSize: [12, 12]
+        })}).addTo(map);
 
         map.setView([lat, lng], 10);
       },
@@ -225,19 +214,17 @@
 
   function changeMapStyle() {
     var mapStyles = Object.keys(baseMaps);
-    var currentIndex = mapStyles.indexOf(currentBaseLayer.options.attribution.includes('Google') ? 
-      (currentBaseLayer.options.attribution.includes('lyrs=s') ? "Satellite" : "Terrain") 
-      : "OpenStreetMap");
-
-    var nextIndex = (currentIndex + 1) % mapStyles.length;
-    var nextBaseLayer = baseMaps[mapStyles[nextIndex]];
+    var nextBaseLayer = baseMaps[mapStyles[(mapStyles.indexOf(currentBaseLayer.options.attribution.includes('CartoDB') ? "Dark Mode" : mapStyles.find(key => baseMaps[key] === currentBaseLayer)) + 1) % mapStyles.length]];
 
     map.removeLayer(currentBaseLayer);
     currentBaseLayer = nextBaseLayer;
     currentBaseLayer.addTo(map);
+
+    // Ensure radar & alerts stay on top
+    radarLayer.bringToFront();
+    alertsLayer.bringToFront();
   }
 
-  // Scale Bar
   L.control.scale().addTo(map);
 </script>
 
