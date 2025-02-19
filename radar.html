@@ -117,7 +117,7 @@
       attribution: "Weather Alerts &copy; Environment Canada"
     }).addTo(map);
 
-    // Weather Warning Locations (Markers)
+    // Weather Warning Locations & Regions
     var warningsLayer = L.layerGroup().addTo(map);
 
     async function fetchWeatherWarnings() {
@@ -125,11 +125,18 @@
         let response = await fetch('https://geo.weather.gc.ca/geomet/features/collections/weather.alerts/items?f=geojson&lang=en');
         let data = await response.json();
 
+        // Clear previous warnings
         warningsLayer.clearLayers();
+
+        // Ensure GeoJSON data exists
+        if (!data || !data.features) {
+          console.warn("No warning features found in API response.");
+          return;
+        }
 
         L.geoJSON(data, {
           style: function (feature) {
-            return { color: "red", weight: 2, fillOpacity: 0.4 };
+            return { color: "red", weight: 2, fillOpacity: 0.3 };
           },
           pointToLayer: function (feature, latlng) {
             return L.marker(latlng, { 
@@ -150,6 +157,8 @@
                 <p>${warning.description || "No additional details available."}</p>
               `;
               layer.bindPopup(popupContent);
+            } else {
+              console.warn("Feature without properties found:", feature);
             }
           }
         }).addTo(warningsLayer);
@@ -170,7 +179,7 @@
     var overlayMaps = {
       "📡 Radar": radarLayer,
       "⚠️ Weather Alerts": alertsLayer,
-      "📍 Warning Locations": warningsLayer
+      "📍 Warning Locations & Areas": warningsLayer
     };
 
     L.control.layers({}, overlayMaps, { collapsed: false }).addTo(map);
