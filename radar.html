@@ -17,16 +17,33 @@
       height: 85vh;
     }
     .radar-legend {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
+      position: absolute;
+      top: 70px; /* Places it below the layer control */
+      right: 10px;
       background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      font-size: 14px;
-      line-height: 18px;
-      box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
+      padding: 6px;
+      font-size: 12px;
+      line-height: 14px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
       border-radius: 5px;
       z-index: 1000;
+      width: 140px;
+    }
+    .radar-legend strong {
+      display: block;
+      text-align: center;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+    .radar-legend ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .radar-legend li {
+      padding: 2px;
+      font-size: 11px;
+      text-align: center;
     }
     .info-section {
       width: 100%;
@@ -46,17 +63,17 @@
   <!-- Interactive Weather Map -->
   <div id="weather-map" class="map-container"></div>
 
-  <!-- Radar Intensity Legend -->
+  <!-- Radar Intensity Legend (Now Smaller & Positioned in Top Right) -->
   <div id="radar-legend" class="radar-legend">
     <strong>Radar Intensity (dBZ)</strong>
     <ul>
-      <li style="color: #FFFFFF; background:#000080; padding:2px;">0-5 dBZ - Very Light</li>
-      <li style="color: #FFFFFF; background:#0000FF; padding:2px;">5-15 dBZ - Light</li>
-      <li style="color: #FFFFFF; background:#00FFFF; padding:2px;">15-30 dBZ - Moderate</li>
-      <li style="color: #000000; background:#00FF00; padding:2px;">30-40 dBZ - Heavy</li>
-      <li style="color: #000000; background:#FFFF00; padding:2px;">40-50 dBZ - Very Heavy</li>
-      <li style="color: #000000; background:#FF8000; padding:2px;">50-60 dBZ - Extreme</li>
-      <li style="color: #FFFFFF; background:#FF0000; padding:2px;">60+ dBZ - Intense Storm</li>
+      <li style="background:#000080; color: #FFF;">0-5 dBZ (Very Light)</li>
+      <li style="background:#0000FF; color: #FFF;">5-15 dBZ (Light)</li>
+      <li style="background:#00FFFF; color: #000;">15-30 dBZ (Moderate)</li>
+      <li style="background:#00FF00; color: #000;">30-40 dBZ (Heavy)</li>
+      <li style="background:#FFFF00; color: #000;">40-50 dBZ (Very Heavy)</li>
+      <li style="background:#FF8000; color: #000;">50-60 dBZ (Extreme)</li>
+      <li style="background:#FF0000; color: #FFF;">60+ dBZ (Intense Storm)</li>
     </ul>
   </div>
 
@@ -96,7 +113,7 @@
       layers: "ALERTS",
       format: "image/png",
       transparent: true,
-      opacity: 0.33, // Makes the alerts layer 33% transparent
+      opacity: 0.33,
       attribution: "Weather Alerts &copy; Environment Canada"
     }).addTo(map);
 
