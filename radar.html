@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Weather Radar</title>
+  <title>ECCC LIVE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -103,6 +103,7 @@
 
   <!-- Header -->
   <div class="header">Live Weather Radar Service</div>
+  <p>Created by: Noah Cornish<p>
 
   <!-- Radar Intensity Legend -->
   <div class="custom-legend">
@@ -166,7 +167,7 @@
     layers: "ALERTS",
     format: "image/png",
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.2,
     attribution: "Weather Alerts &copy; Environment Canada"
   }).addTo(map);
 
